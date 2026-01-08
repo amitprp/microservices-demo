@@ -208,6 +208,73 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+func (fe *frontendServer) compareHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	idsParam := r.URL.Query().Get("ids")
+	rawIDs := strings.Split(idsParam, ",")
+	productIDs := make([]string, 0, len(rawIDs))
+	for _, rawID := range rawIDs {
+		id := strings.TrimSpace(rawID)
+		if id != "" {
+			productIDs = append(productIDs, id)
+		}
+	}
+
+	data := map[string]interface{}{
+		"products":    []map[string]interface{}{},
+		"summary":     "",
+		"error":       "",
+		"cart_size":   0,
+		"show_footer": true,
+	}
+
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		log.WithField("error", err).Warn("could not retrieve cart for compare")
+	} else {
+		data["cart_size"] = cartSize(cart)
+	}
+
+	if len(productIDs) < 2 {
+		data["error"] = "Select at least two products to compare."
+		if err := templates.ExecuteTemplate(w, "compare", injectCommonTemplateData(r, data)); err != nil {
+			log.Error(err)
+		}
+		return
+	}
+
+	if len(productIDs) > 3 {
+		productIDs = productIDs[:3]
+	}
+
+	compareResp, err := fe.compareProducts(r.Context(), productIDs)
+	if err != nil {
+		data["error"] = "Unable to compare products right now."
+		log.WithField("error", err).Warn("compare service request failed")
+		if err := templates.ExecuteTemplate(w, "compare", injectCommonTemplateData(r, data)); err != nil {
+			log.Error(err)
+		}
+		return
+	}
+
+	products := make([]map[string]interface{}, 0, len(compareResp.Products))
+	for _, product := range compareResp.Products {
+		products = append(products, map[string]interface{}{
+			"id":          product.ID,
+			"name":        product.Name,
+			"description": product.Description,
+			"price":       toMoneyView(product.Price),
+		})
+	}
+
+	data["products"] = products
+	data["summary"] = compareResp.Summary
+
+	if err := templates.ExecuteTemplate(w, "compare", injectCommonTemplateData(r, data)); err != nil {
+		log.Error(err)
+	}
+}
+
 func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	quantity, _ := strconv.ParseUint(r.FormValue("quantity"), 10, 32)
@@ -232,7 +299,7 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to add to cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", baseUrl + "/cart")
+	w.Header().Set("location", baseUrl+"/cart")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -244,7 +311,7 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to empty cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", baseUrl + "/")
+	w.Header().Set("location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -423,7 +490,7 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 		c.MaxAge = -1
 		http.SetCookie(w, c)
 	}
-	w.Header().Set("Location", baseUrl + "/")
+	w.Header().Set("Location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
 }
 

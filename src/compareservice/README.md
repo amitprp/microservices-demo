@@ -14,6 +14,7 @@ PORT=8080 PRODUCT_CATALOG_SERVICE_ADDR=localhost:3550 python compareservice.py
 ```bash
 docker build -t compareservice:dev .
 docker run -p 8080:8080 \
+  --add-host=host.docker.internal:host-gateway \
   -e PORT=8080 \
   -e PRODUCT_CATALOG_SERVICE_ADDR=host.docker.internal:3550 \
   compareservice:dev
@@ -39,14 +40,21 @@ curl -X POST localhost:8080/compare \
   -d '{"product_ids":["OLJCESPC7Z","66VCHSJNUP"]}'
 ```
 
-The OpenAPI specification is served at `http://localhost:8080/openapi.yaml` and stored locally at `openapi.yaml`.
+For three products:
+```bash
+curl -X POST localhost:8080/compare \
+  -H 'Content-Type: application/json' \
+  -d '{"product_ids":["OLJCESPC7Z","66VCHSJNUP","1YMWWN1N4O"]}'
+```
+
+The OpenAPI specification is served at `http://localhost:8080/openapi.yaml` and stored locally at `src/compareservice/openapi.yaml`.
 
 ## Testing
 ```bash
 pytest -q
 ```
 
-This runs the compareservice unit tests (if present) and reports any failures.
+This runs compareservice unit tests that validate ID input rules, price formatting and summary selection in `compare_logic.py`, plus the `/compare` handler using a mocked product catalog client.
 
 ## Acceptance criteria
 - README provides a reproducible local/Docker/Kubernetes runbook and curl examples.

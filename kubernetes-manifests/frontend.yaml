@@ -36,7 +36,10 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
       containers:
-        - name: server
+        - name: 
+          image: compareservice:local   # Ваш локальный образ
+          imagePullPolicy: Never        # Брать только из minikube
+          
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -82,6 +85,9 @@ spec:
             value: "adservice:9555"
           - name: SHOPPING_ASSISTANT_SERVICE_ADDR
             value: "shoppingassistantservice:80"
+          - name: COMPARE_SERVICE_ADDR
+            value: "compareservice:80"
+          # ----------------------------------------
           # # ENV_PLATFORM: One of: local, gcp, aws, azure, onprem, alibaba
           # # When not set, defaults to "local" unless running in GKE, otherwies auto-sets to gcp
           # - name: ENV_PLATFORM

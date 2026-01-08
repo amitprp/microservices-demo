@@ -39,6 +39,7 @@
     <link rel="stylesheet" type="text/css" href="{{ $.baseUrl }}/static/styles/cart.css">
     <link rel="stylesheet" type="text/css" href="{{ $.baseUrl }}/static/styles/order.css">
     <link rel="stylesheet" type="text/css" href="{{ $.baseUrl }}/static/styles/bot.css">
+    <script defer src="{{ $.baseUrl }}/static/scripts/compare.js"></script>
     {{ if $.is_cymbal_brand }}
     <link rel='shortcut icon' type='image/x-icon' href='{{ $.baseUrl }}/static/favicon-cymbal.ico' />
     {{ else }}
@@ -99,4 +100,15 @@
         </div>
 
     </header>
+    <div
+      id="compare-bar"
+      class="compare-bar"
+      data-base-url="{{ $.baseUrl }}"
+      aria-live="polite"
+    >
+        <div class="compare-bar-content">
+            <button type="button" class="compare-bar-button" id="compare-bar-compare">Compare (0/3)</button>
+            <button type="button" class="compare-bar-button compare-bar-clear" id="compare-bar-clear">Clear</button>
+        </div>
+    </div>
     {{end}}

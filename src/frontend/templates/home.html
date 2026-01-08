@@ -52,6 +52,10 @@
             <div>
               <div class="hot-product-card-name">{{ .Item.Name }}</div>
               <div class="hot-product-card-price">{{ renderMoney .Price }}</div>
+              <label class="compare-control">
+                <input type="checkbox" class="compare-checkbox" data-product-id="{{ .Item.Id }}">
+                Compare
+              </label>
             </div>
           </div>
           {{ end }}

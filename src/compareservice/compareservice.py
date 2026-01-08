@@ -16,12 +16,13 @@
 
 import os
 import grpc
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 
 import demo_pb2
 import demo_pb2_grpc
 
 from logger import getJSONLogger
+from compare_logic import validate_product_ids, build_summary
 
 logger = getJSONLogger('compareservice')
 
@@ -42,6 +43,11 @@ def create_app():
     def health():
         return jsonify({"status": "healthy"}), 200
 
+    @app.route('/openapi.yaml', methods=['GET'])
+    def openapi_spec():
+        spec_path = os.path.join(os.path.dirname(__file__), 'openapi.yaml')
+        return send_file(spec_path, mimetype='application/yaml')
+
     @app.route('/compare', methods=['POST'])
     def compare_products():
         """
@@ -55,20 +61,15 @@ def create_app():
             return jsonify({"error": "product_ids required"}), 400
 
         product_ids = data['product_ids']
-
-        # Validate: must have 2-3 products
-        if len(product_ids) < 2:
-            return jsonify({"error": "At least 2 products required for comparison"}), 400
-        if len(product_ids) > 3:
-            return jsonify({"error": "Maximum 3 products allowed for comparison"}), 400
+        try:
+            validate_product_ids(product_ids)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
 
         logger.info(f"[CompareProducts] comparing products: {product_ids}")
 
         # Fetch product details from ProductCatalogService
         products = []
-        cheapest = None
-        cheapest_price = None
-
         for product_id in product_ids:
             try:
                 product = product_catalog_stub.GetProduct(
@@ -89,21 +90,12 @@ def create_app():
                 }
                 products.append(product_data)
 
-                # Track cheapest product
-                total_price = product.price_usd.units * 1e9 + product.price_usd.nanos
-                if cheapest_price is None or total_price < cheapest_price:
-                    cheapest_price = total_price
-                    cheapest = product_data
-
             except grpc.RpcError as e:
                 logger.error(f"Failed to get product {product_id}: {e}")
                 return jsonify({"error": f"Product not found: {product_id}"}), 404
 
         # Generate summary
-        summary = ""
-        if cheapest:
-            price_str = f"${cheapest['price']['units']}.{cheapest['price']['nanos'] // 10000000:02d}"
-            summary = f"{cheapest['name']} is the cheapest option at {price_str}"
+        summary = build_summary(products)
 
         logger.info(f"[CompareProducts] returning {len(products)} products")
 
