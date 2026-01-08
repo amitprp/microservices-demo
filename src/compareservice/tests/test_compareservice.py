@@ -61,6 +61,42 @@ class CompareServiceIntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "product_ids required")
 
+    def test_compare_returns_feature_matrix(self):
+        products_by_id = {
+            "sku-1": build_product("sku-1", "Alpha", units=10),
+            "sku-2": build_product("sku-2", "Beta", units=5),
+        }
+
+        def fake_get_product(request):
+            return products_by_id[request.id]
+
+        with mock.patch.object(
+            compareservice.product_catalog_stub, "GetProduct", side_effect=fake_get_product
+        ):
+            response = self.client.post(
+                "/compare", json={"product_ids": ["sku-1", "sku-2"]}
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertIn("feature_matrix", payload)
+        self.assertIn("features", payload["feature_matrix"])
+        self.assertIn("matrix", payload["feature_matrix"])
+
+    def test_compare_validates_too_few_products(self):
+        response = self.client.post("/compare", json={"product_ids": ["only-one"]})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("At least 2", response.get_json()["error"])
+
+    def test_compare_validates_too_many_products(self):
+        response = self.client.post(
+            "/compare", json={"product_ids": ["a", "b", "c", "d"]}
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Maximum 3", response.get_json()["error"])
+
 
 if __name__ == "__main__":
     unittest.main()
