@@ -28,3 +28,36 @@ def build_summary(products):
     cheapest = min(products, key=total_price_nanos)
     price_str = format_money(cheapest.get("price", {}))
     return f"{cheapest.get('name')} is the cheapest option at {price_str}"
+
+
+def build_feature_matrix(products):
+    """
+    Build a feature matrix from product categories.
+    Returns: { "features": [...], "matrix": { product_id: { feature: bool } } }
+    """
+    if not products:
+        return {"features": [], "matrix": {}}
+
+    # Collect all unique features (categories) from all products
+    all_features = set()
+    for product in products:
+        categories = product.get("categories", [])
+        all_features.update(categories)
+
+    # Sort features alphabetically
+    features = sorted(all_features)
+
+    if not features:
+        return {"features": [], "matrix": {}}
+
+    # Build matrix: for each product, mark which features it has
+    matrix = {}
+    for product in products:
+        product_id = product.get("id", "")
+        product_categories = set(product.get("categories", []))
+        matrix[product_id] = {
+            feature: feature in product_categories
+            for feature in features
+        }
+
+    return {"features": features, "matrix": matrix}
