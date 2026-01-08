@@ -22,7 +22,7 @@ import demo_pb2
 import demo_pb2_grpc
 
 from logger import getJSONLogger
-from compare_logic import validate_product_ids, build_summary
+from compare_logic import validate_product_ids, build_summary, build_feature_matrix
 
 logger = getJSONLogger('compareservice')
 
@@ -97,11 +97,15 @@ def create_app():
         # Generate summary
         summary = build_summary(products)
 
+        # Build feature matrix
+        feature_matrix = build_feature_matrix(products)
+
         logger.info(f"[CompareProducts] returning {len(products)} products")
 
         return jsonify({
             "products": products,
-            "summary": summary
+            "summary": summary,
+            "feature_matrix": feature_matrix
         })
 
     return app
