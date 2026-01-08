@@ -36,7 +36,7 @@ const updateCheckboxState = (checkboxes, selectedIds) => {
   });
 };
 
-const updateCompareBar = (compareBar, compareButton, selectedIds) => {
+const updateCompareBar = (compareBar, compareButton, clearButton, selectedIds, hasCheckboxes) => {
   if (!compareBar || !compareButton) {
     return;
   }
@@ -45,6 +45,10 @@ const updateCompareBar = (compareBar, compareButton, selectedIds) => {
     compareBar.classList.add("is-visible");
   } else {
     compareBar.classList.remove("is-visible");
+  }
+  // Only show clear button on pages with checkboxes (home page)
+  if (clearButton) {
+    clearButton.style.display = hasCheckboxes ? "" : "none";
   }
 };
 
@@ -60,8 +64,9 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedIds = selectedIds.slice(0, compareMaxItems);
     saveCompareIds(selectedIds);
   }
+  const hasCheckboxes = checkboxes.length > 0;
   updateCheckboxState(checkboxes, selectedIds);
-  updateCompareBar(compareBar, compareButton, selectedIds);
+  updateCompareBar(compareBar, compareButton, clearButton, selectedIds, hasCheckboxes);
 
   if (compareButton) {
     compareButton.addEventListener("click", () => {
@@ -78,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedIds = [];
       saveCompareIds(selectedIds);
       updateCheckboxState(checkboxes, selectedIds);
-      updateCompareBar(compareBar, compareButton, selectedIds);
+      updateCompareBar(compareBar, compareButton, clearButton, selectedIds, hasCheckboxes);
     });
   }
 
@@ -103,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       saveCompareIds(selectedIds);
-      updateCompareBar(compareBar, compareButton, selectedIds);
+      updateCompareBar(compareBar, compareButton, clearButton, selectedIds, hasCheckboxes);
     });
   });
 });
