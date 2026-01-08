@@ -37,8 +37,6 @@ spec:
         runAsUser: 1000
       containers:
         - name: server
-          image: compareservice:local   # Ваш локальный образ
-          imagePullPolicy: Never        # Брать только из minikube
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

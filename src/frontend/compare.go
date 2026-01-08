@@ -26,9 +26,15 @@ type compareProduct struct {
 	Price       compareMoney `json:"price"`
 }
 
+type featureMatrix struct {
+	Features []string                   `json:"features"`
+	Matrix   map[string]map[string]bool `json:"matrix"`
+}
+
 type compareResponse struct {
-	Products []compareProduct `json:"products"`
-	Summary  string           `json:"summary"`
+	Products      []compareProduct `json:"products"`
+	Summary       string           `json:"summary"`
+	FeatureMatrix featureMatrix    `json:"feature_matrix"`
 }
 
 type compareRequest struct {

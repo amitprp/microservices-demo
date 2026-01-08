@@ -270,6 +270,12 @@ func (fe *frontendServer) compareHandler(w http.ResponseWriter, r *http.Request)
 	data["products"] = products
 	data["summary"] = compareResp.Summary
 
+	// Pass feature matrix if features exist
+	if len(compareResp.FeatureMatrix.Features) > 0 {
+		data["features"] = compareResp.FeatureMatrix.Features
+		data["feature_matrix"] = compareResp.FeatureMatrix.Matrix
+	}
+
 	if err := templates.ExecuteTemplate(w, "compare", injectCommonTemplateData(r, data)); err != nil {
 		log.Error(err)
 	}

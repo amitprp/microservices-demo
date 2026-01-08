@@ -56,6 +56,42 @@
               </tbody>
             </table>
           </div>
+
+          {{ if $.features }}
+          <div class="col-12 mt-4">
+            <h4>Feature Comparison</h4>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  {{ range $.products }}
+                  <th class="text-center">{{ .name }}</th>
+                  {{ end }}
+                </tr>
+              </thead>
+              <tbody>
+                {{ $products := $.products }}
+                {{ $matrix := $.feature_matrix }}
+                {{ range $.features }}
+                {{ $feature := . }}
+                <tr>
+                  <td>{{ $feature }}</td>
+                  {{ range $products }}
+                  <td class="text-center">
+                    {{ if index (index $matrix .id) $feature }}
+                    <span class="text-success">✓</span>
+                    {{ else }}
+                    <span class="text-muted">✗</span>
+                    {{ end }}
+                  </td>
+                  {{ end }}
+                </tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+          {{ end }}
+
           {{ end }}
         </div>
         <div class="row d-none d-lg-block home-desktop-footer-row">

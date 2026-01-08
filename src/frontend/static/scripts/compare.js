@@ -40,13 +40,20 @@ const updateCompareBar = (compareBar, compareButton, clearButton, selectedIds, h
   if (!compareBar || !compareButton) {
     return;
   }
+
+  // Only show compare bar on pages with checkboxes (home page)
+  if (!hasCheckboxes) {
+    compareBar.classList.remove("is-visible");
+    return;
+  }
+
   compareButton.textContent = `Compare (${selectedIds.length}/${compareMaxItems})`;
   if (selectedIds.length >= 2) {
     compareBar.classList.add("is-visible");
   } else {
     compareBar.classList.remove("is-visible");
   }
-  // Only show clear button on pages with checkboxes (home page)
+  // Only show clear button on home page
   if (clearButton) {
     clearButton.style.display = hasCheckboxes ? "" : "none";
   }
